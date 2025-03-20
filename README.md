@@ -1,5 +1,5 @@
 # DTXSMARTS
-Straightforward command-line SMARTS substructure search for DSSTOX
+No-frills command-line SMARTS substructure search for DSSTOX
 
 ## HELP
 ```
