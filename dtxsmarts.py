@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from contextlib import closing
-from rdkit.Chem import MolFromSmiles, MolFromSmarts
+from rdkit.Chem import MolFromSmiles, MolFromSmarts, GetSymmSSSR
 from mysql.connector import connect
 from pandas import read_sql_query
 from warnings import filterwarnings
@@ -38,8 +38,15 @@ filterwarnings('ignore', category=UserWarning)
 with closing(connect(**config)) as conn:
     cmpds = read_sql_query(query, conn)
 
+# Read a SMILES or SMARTS string without sanitizing, then initialize query information
+def mol_from_str(str, smarts=False):
+    mol = MolFromSmarts(str) if smarts else MolFromSmiles(str, sanitize=False)
+    mol.UpdatePropertyCache(strict=False)
+    GetSymmSSSR(mol)
+    return mol
+
 # Convert input substructure SMARTS to query molecules
-qmols = [MolFromSmarts(sma) for sma in args.subs]
+qmols = [mol_from_str(sma, smarts=True) for sma in args.subs]
 # Match a molecule against input query molecule substructures
 def subs(mol):
     matches = [mol.HasSubstructMatch(q) for q in qmols]
@@ -49,8 +56,7 @@ def subs(mol):
 def test(smi):
     match = False
     try:
-        mol = MolFromSmiles(smi, sanitize=False)
-        mol.UpdatePropertyCache(strict=False)
+        mol = mol_from_str(smi)
         try:
             match = subs(mol)
         except:
