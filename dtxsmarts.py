@@ -50,6 +50,7 @@ def test(smi):
     match = False
     try:
         mol = MolFromSmiles(smi, sanitize=False)
+        mol.UpdatePropertyCache(strict=False)
         try:
             match = subs(mol)
         except:
